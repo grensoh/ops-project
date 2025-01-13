@@ -44,7 +44,7 @@ while True:
         message = str(packet, "ascii") # this is our message
         rssi = str(rfm.last_rssi) # signal strength
 
-        message_parts = message.split(",")
+        message_parts = message.split(",") #2, 1, 1000; 9.02, OPS
         if len(message_parts) >= 4:
             # Extract pressure (third element in the message)
             try:
@@ -55,5 +55,5 @@ while True:
         else:
             print("Invalid message format")
             
-        print(f"{message}, {cansat_height}, RSSI: {rssi}") # print message with signal strength and cansat height
+        print(f"{message}, {cansat_height} m, RSSI: {rssi}") # print message with signal strength and cansat height
         led.off()
