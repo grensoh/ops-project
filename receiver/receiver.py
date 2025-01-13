@@ -12,6 +12,18 @@ rst = Pin( 3, Pin.OUT, value=False )
 
 led = Pin( 25, Pin.OUT )
 
+#pb = pression au niveau de la mer (Pa) --> variable !!
+#tb = température au niveau de la mer (K) --> variable !!
+#lb = taux de chute de température standard (K/m) = -0,0065 K/m
+#r = constante universelle des gaz = 8,31432 (N/m)/(mol.K)
+#g0 = constante d'accélération gravitationnelle = 9,80665 m/s²
+#m = masse molaire de l'air terrestre = 0,0289644 kg/mol
+
+def calculate_altitude(pressure, pb=101325, tb=288, lb=-0,0065, r=8,31432, g0=9,80665, m=0,0289644):
+    pressure = pressure * 100 #switching hPa to Pa
+    cansat_height = (tb / lb) * ((pressure / pb) ** ((-r * lb) / (g0 * m)) - 1) #application of the formula
+    return cansat_height
+
 rfm = RFM69( spi=spi, nss=nss, reset=rst )
 rfm.frequency_mhz = FREQ
 rfm.encryption_key = ( ENCRYPTION_KEY )
@@ -37,12 +49,11 @@ while True:
             # Extract pressure (third element in the message)
             try:
                 pressure = float(message_parts[2])  # Pressure is the third element
-                pressure += 15  # Add 15 to the pressure value
-                print(f"Pressure: {pressure:.2f} hPa (original + 15)")
+                cansat_height = calculate_altitude(pressure) #application of the formula
             except ValueError:
                 print("Invalid pressure data")
         else:
             print("Invalid message format")
             
-        print(message + ", " + rssi) # print message with signal strength
+        print(f"{message}, {cansat_height}, RSSI: {rssi}") # print message with signal strength and cansat height
         led.off()
