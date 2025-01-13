@@ -16,4 +16,4 @@ We are a team from the school Mater Dei located in Brussels. This project was ma
 
 ## 📞 Follow us in our progress
 
-You can easily find us on Instagram [@ops_project_2025](https://www.instagram.com/ops_project_2025/?igsh=MXEydjIzcHNqNTN0OA%3D%3D). Moreover, we are currently working on a website releasing soon, so stay tuned !
+You can easily find us on Instagram [@ops_project_2025](https://www.instagram.com/ops_project_2025/?igsh=MXEydjIzcHNqNTN0OA%3D%3D). Stay tuned !
