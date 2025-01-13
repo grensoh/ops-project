@@ -31,5 +31,18 @@ while True:
         # And decode from ASCII text (to local utf-8)
         message = str(packet, "ascii") # this is our message
         rssi = str(rfm.last_rssi) # signal strength
+
+        message_parts = message.split(",")
+        if len(message_parts) >= 4:
+            # Extract pressure (third element in the message)
+            try:
+                pressure = float(message_parts[2])  # Pressure is the third element
+                pressure += 15  # Add 15 to the pressure value
+                print(f"Pressure: {pressure:.2f} hPa (original + 15)")
+            except ValueError:
+                print("Invalid pressure data")
+        else:
+            print("Invalid message format")
+            
         print(message + ", " + rssi) # print message with signal strength
         led.off()
