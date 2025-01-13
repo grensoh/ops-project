@@ -12,7 +12,7 @@ The OPS Project is an ambitious leap into the world of space exploration, where 
 
 ## 👤 Who are we ?
 
-We are a team from the school Mater Dei located in Brussels. This project was made possible thanks to the collaboration of Ethan Verbeiren, Luca Di Sarno, Alexandre Demoulin, Timéo Thys, Nicolas Vargas, Siméon Stoyanov, Aline Krbs, Diane Lazzarot. Special thanks to our advisor-teachers, miss Losdyck and Kervyn de Meerendré.
+We are a team from the school Mater Dei located in Brussels. This project was made possible thanks to the collaboration of Ethan Verbeiren, Luca Di Sarno, Alexandre Demoulin, Timéo Thys, Nicolas Vargas, Siméon Stoyanov, Aline Karabas, Diane Lazzarot. Special thanks to our advisor-teachers, miss Losdyck and Kervyn de Meerendré.
 
 ## 📞 Follow us in our progress
 
