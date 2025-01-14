@@ -37,11 +37,22 @@ counter = 1 # set counter
 ctime = time.time() # time now
 
 while True:
-    temp, pressure, humidity =  bmp.raw_values # read BMP280: Temp, pressure (hPa), humidity
-    msg = f"{counter}, {time.time()-ctime}, {pressure:.2f}, {temp:.2f}, {NAME}"
-    print(msg)
-    led.on() # Led ON while sending data
-    rfm.send(bytes(msg , "utf-8"))
-    led.off()
-    counter += 1 # increment counter
-    time.sleep(0.5) # wait before next reading
+    try:
+        temp, pressure, humidity =  bmp.raw_values # read BMP280: Temp, pressure (hPa), humidity
+    except OSError as e:
+        print(f"BMP280 sensor reading error : {e}")
+        temp, pressure, humidity = None, None, None
+
+    if temp is not None and pressure is not None and humidity is not None:
+        msg = f"{counter}, {time.time()-ctime}, {pressure:.2f}, {temp:.2f}, {humidity:.2f}, {NAME}"
+        print(msg)
+        led.on() # Led ON while sending data
+        try:
+            rfm.send(bytes(msg , "utf-8")) #trying to send data
+        except Exception as e:
+            print("Radio transmission error : {e}")
+            
+        led.off()
+        
+counter += 1 # increment counter
+time.sleep(0.5) # wait before next reading
