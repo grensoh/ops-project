@@ -44,7 +44,7 @@ while True:
         message = str(packet, "ascii") # this is our message
         rssi = str(rfm.last_rssi) # signal strength
 
-        message_parts = message.split(",") #2, 1, 1000; 9.02, OPS
+        message_parts = message.split(",") #2, 1, 1000; 9.02, 0.2, OPS
         if len(message_parts) >= 4:
             # Extract pressure (third element in the message)
             try:
