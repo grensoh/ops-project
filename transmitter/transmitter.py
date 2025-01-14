@@ -51,8 +51,9 @@ while True:
             rfm.send(bytes(msg , "utf-8")) #trying to send data
         except Exception as e:
             print("Radio transmission error : {e}")
-            
         led.off()
+    else:
+        print("Invalid data, sending aborted")
         
 counter += 1 # increment counter
 time.sleep(0.5) # wait before next reading
