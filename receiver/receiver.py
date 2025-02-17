@@ -25,6 +25,13 @@ def calculate_altitude(pressure, pb=101325, tb=288, lb=-0,0065, r=8,31432, g0=9,
     return cansat_height
 
 rfm = RFM69( spi=spi, nss=nss, reset=rst )
+
+rfm.tx_power = 20
+rfm.bitrate = 4800
+rfm.frequency_deviation = 9500
+rfm.spi_write(0x1A, 0xF4)
+rfm.spi_write(0x19, 0xF4)
+
 rfm.frequency_mhz = FREQ
 rfm.encryption_key = ( ENCRYPTION_KEY )
 rfm.node = NODE_ID
