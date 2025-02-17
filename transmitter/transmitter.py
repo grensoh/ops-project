@@ -18,6 +18,13 @@ i2c = I2C(0, scl=Pin(9), sda=Pin(8)) # initialize the i2c bus on GP9 and GP8
 
 # RFM Module
 rfm = RFM69(spi=spi, nss=nss, reset=rst)
+
+rfm.tx_power = 20
+rfm.bitrate = 4800
+rfm.frequency_deviation = 9500
+rfm.spi_write(0x1A, 0xF4)
+rfm.spi_write(0x19, 0xF4)
+
 rfm.frequency_mhz  = FREQ
 rfm.encryption_key = (ENCRYPTION_KEY)
 rfm.node           = NODE_ID # This instance is the node 120
