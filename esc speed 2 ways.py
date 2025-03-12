@@ -61,5 +61,8 @@ while True :
     print("Forward increase to {max}")
     for i in range (0, max, +1) :
         set_speed(i)
+        time.sleep(0.1)
     print("Forward decrease to 0")
-    for i in range(max, 0, +1)
+    for i in range(max, 0, +1) :
+        set_speed(i)
+        time.sleep(i)
