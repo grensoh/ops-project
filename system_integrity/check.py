@@ -13,7 +13,7 @@ print(f"Mémoire allouée : {mem_allocated} bytes")
 print(f"Mémoire libre : {mem_free} bytes")
 
 while True:
-    led.value(1) # turn on led
-    time.sleep(1) # wait 1 second
-    led.value(0) # turn off led
-    time.sleep(1) # wait 1 second
+    led.value(1)
+    time.sleep(1)
+    led.value(0)
+    time.sleep(1)
