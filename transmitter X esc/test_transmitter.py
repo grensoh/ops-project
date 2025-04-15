@@ -7,9 +7,26 @@ from tsl2591 import TSL2591
 from MPU6050_lib import MPU6050
 import time
 import math
+from esc import set_speed, calibrate, arm
 
 #DEBUG -----------------------------------------------------------------------------------------------------
 #uart = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
+
+#PID CONTROLLER ---------------------------------------------------------------------------------------------
+class PID:
+    def __init__(self, Kp=1.0, Ki=0.0, Kd=0.0):
+        self.Kp = Kp
+        self.Ki = Ki
+        self.Kd = Kd
+        self.integral = 0
+        self.previous_error = 0
+
+    def compute(self, setpoint, current):
+        error = setpoint - current
+        self.integral += error
+        derivative = error - self.previous_error
+        self.previous_error = error
+        return self.Kp * error + self.Ki * self.integral + self.Kd * derivative
 
 #PARAMETRES -------------------------------------------------------------------------------------------------
 NAME           = "OPS"
@@ -91,12 +108,57 @@ gyro_bias[1] /= 100
 gyro_bias[2] /= 100
 print("Calibrage terminé.")
 
-#VARIABLES ----------------------------------------------------------------------------------------------------
-frequence = 0.5 #fréquence de répétition de la boucle = fréquence de la mesure
+#FONCTION BALAYAGE ----------------------------------------------------------------------------------------------
+def scan_light_by_rotation(max_speed=30, step_delay=0.2, duration=4):
+    """
+    Balaye en rotation sur un axe avec la roue à réaction pendant 'duration' secondes,
+    en collectant les données d'angle (yaw) et de luminosité (full spectrum).
+    """
+    print("Début du balayage lumineux...")
+    luminosite_par_angle = []
+
+    start_time = time.time()
+    set_speed(max_speed)
+    while time.time() - start_time < duration:
+        try:
+            # Attendre que le yaw change suffisamment (selon la vitesse)
+            time.sleep(step_delay)
+            lux, full, ir, visible = light_sensor.get_lux()
+            current_angle = yaw  # récupéré depuis ta variable globale
+            luminosite_par_angle.append((current_angle, full))
+            print(f"Angle: {current_angle:.2f}°, Full: {full}")
+        except Exception as e:
+            print(f"Erreur lecture lumière ou yaw: {e}")
+    set_speed(0)
+    print("Fin du balayage.")
+    return luminosite_par_angle
+
+#FONCTION CALIBRAGE VIA PID -------------------------------------------------------------------------------------
+def align_to_brightest_angle(target_angle, pid: PID, tolerance=1.0):
+    """
+    Utilise un PID pour orienter le système vers l’angle le plus lumineux détecté.
+    """
+    print(f"Alignement vers l’angle le plus lumineux : {target_angle:.2f}°")
+    while True:
+        current_angle = yaw
+        correction = pid.compute(target_angle, current_angle)
+        correction = max(min(correction, 100), -100)  # clamp entre -100 et 100
+        set_speed(correction)
+        print(f"Yaw: {current_angle:.2f}, Correction: {correction:.2f}")
+
+        if abs(current_angle - target_angle) <= tolerance:
+            print("Cible atteinte.")
+            break
+        time.sleep(0.1)
+    set_speed(0)
+    
+#VARIABLES ------------------------------------------------------------------------------------------------------
+frequence = 0.1 #fréquence de répétition de la boucle = fréquence de la mesure
 yaw = 0.0 #angle
 filtre_complementaire = 0.9999999 #coefficient du filtre
 luminosite_par_angle = []
 counter = 1 # set counter
+pid_controller = PID(Kp=3.5, Ki=0.05, Kd=1.2)
 
 #HEADER -------------------------------------------------------------------------------------------------------
 print( 'Frequency     :', rfm.frequency_mhz )
@@ -147,6 +209,20 @@ while True:
     except Exception as e:
         print(f"Erreur dans la lecture du BMP280 : {e}")
         temp, pressure, humidity = None, None, None
+
+    #PID CONTROLLER ------------------------------------------------------------------------------------------
+    luminosite_par_angle = scan_light_by_rotation(max_speed=30, duration=5)
+
+    if not luminosite_par_angle:
+        print("Pas de données de luminosité collectées.")
+        continue
+
+    # Trouver l’angle avec la luminosité maximale
+    brightest_angle = max(luminosite_par_angle, key=lambda x: x[1])[0]
+    print(f"Lumière max détectée à l’angle : {brightest_angle:.2f}°")
+
+    # S’orienter vers cet angle
+    align_to_brightest_angle(brightest_angle, pid_controller)
     
     #MESSAGE BUILDING -----------------------------------------------------------------------------------------
     timestamp = time.time()
@@ -181,4 +257,3 @@ Yaw         : {safe_value(yaw)}
     
     counter += 1
     time.sleep(frequence)
-    #luminosite_par_angle.append({"timestamp": timestamp, "angle": yaw, "luminosite": full})
