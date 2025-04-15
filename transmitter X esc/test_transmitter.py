@@ -158,7 +158,7 @@ yaw = 0.0 #angle
 filtre_complementaire = 0.9999999 #coefficient du filtre
 luminosite_par_angle = []
 counter = 1 # set counter
-pid_controller = PID(Kp=3.5, Ki=0.05, Kd=1.2)
+pid_controller = PID(Kp=3.5, Ki=0.05, Kd=1.2) #variable du PID à ajuster en fonction des tests
 
 #HEADER -------------------------------------------------------------------------------------------------------
 print( 'Frequency     :', rfm.frequency_mhz )
