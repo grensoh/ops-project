@@ -163,17 +163,36 @@ async def read_sensors():
 
 #BALAYAGE LUMIERE ------------------------------------------------------------------------------------------------
 async def scan_light():
-    print("Scanning light...")
+    print("Début du balayage lumineux sur 360°...")
     state["scan_data"].clear()
-    set_speed(30)
-    t0 = time.time()
-    while time.time() - t0 < 5:
-        state["scan_data"].append((state["yaw"], state["full"]))
-        await asyncio.sleep(0.1)
+
+    start_yaw = state["yaw"]
+    target_yaw = (start_yaw + 360) % 360
+    set_speed(30)  # Vitesse de rotation constante
+    
+    previous_yaw = start_yaw
+    yaw_accumulated = 0
+    last_sample_time = time.ticks_ms()
+
+    while yaw_accumulated < 360:
+        current_yaw = state["yaw"]
+        delta_yaw = (current_yaw - previous_yaw + 540) % 360 - 180  # Pour gérer l'effet de passage 359 -> 0
+        yaw_accumulated += abs(delta_yaw)
+        previous_yaw = current_yaw
+
+        # Échantillonnage toutes les 100ms
+        if time.ticks_diff(time.ticks_ms(), last_sample_time) > 100:
+            state["scan_data"].append((current_yaw, state["full"]))
+            last_sample_time = time.ticks_ms()
+        
+        await asyncio.sleep(0.01)
+
     set_speed(0)
+    print(f"Balayage terminé. {len(state['scan_data'])} points collectés.")
+
     if state["scan_data"]:
         state["target_angle"] = max(state["scan_data"], key=lambda x: x[1])[0]
-        print("Best light angle:", state["target_angle"])
+        print("Angle avec la plus grande luminosité :", state["target_angle"])
 
 #ALIGNEMENT VIA PID ---------------------------------------------------------------------------------------------
 async def align_to_light():
