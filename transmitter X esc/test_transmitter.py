@@ -167,24 +167,27 @@ async def scan_light():
     state["scan_data"].clear()
 
     start_yaw = state["yaw"]
-    target_yaw = (start_yaw + 360) % 360
-    set_speed(30)  # Vitesse de rotation constante
-    
-    previous_yaw = start_yaw
     yaw_accumulated = 0
+    previous_yaw = start_yaw
     last_sample_time = time.ticks_ms()
+
+    desired_direction = 1  # 1 pour sens horaire, -1 pour antihoraire
+    set_speed(30 * desired_direction)
 
     while yaw_accumulated < 360:
         current_yaw = state["yaw"]
-        delta_yaw = (current_yaw - previous_yaw + 540) % 360 - 180  # Pour gérer l'effet de passage 359 -> 0
-        yaw_accumulated += abs(delta_yaw)
+        delta_yaw = (current_yaw - previous_yaw + 540) % 360 - 180
+
+        if desired_direction * delta_yaw > 0:
+            yaw_accumulated += abs(delta_yaw)
+
         previous_yaw = current_yaw
 
-        # Échantillonnage toutes les 100ms
         if time.ticks_diff(time.ticks_ms(), last_sample_time) > 100:
-            state["scan_data"].append((current_yaw, state["full"]))
+            # Enregistre (yaw modulo 360, full lumière)
+            state["scan_data"].append((current_yaw % 360, state["full"]))
             last_sample_time = time.ticks_ms()
-        
+
         await asyncio.sleep(0.01)
 
     set_speed(0)
