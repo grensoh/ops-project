@@ -191,12 +191,19 @@ async def align_to_light():
     set_speed(0)
     print("Aligned!")
 
-#ECRITURE DEBUG UART --------------------------------------------------------------------------------------------------
+#ENVOI DES DONNEES --------------------------------------------------------------------------------------------------
 async def log_uart():
     counter = 0
     while True:
         msg = f"{counter},{state['yaw']},{state['full']},{state['temp']},{state['pressure']},{state['humidity']}"
         uart.write(msg + "\n")
+        try:
+            led.on()
+            rfm.send(bytes(msg , "utf-8"))
+            led.off()
+        except Exception as e:
+            print(f"Erreur lors de l'envoi des données : {e}")
+            led.off()
         counter += 1
         await asyncio.sleep(0.5)
 
