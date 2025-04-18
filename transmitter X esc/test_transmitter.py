@@ -4,14 +4,15 @@ import uasyncio as asyncio
 import time
 import math
 from machine import SPI, I2C, Pin, ADC, SoftI2C, UART
-from esc_control import set_speed, calibrate, arm
+#from esc_control import set_speed, calibrate, arm
 from bme280 import BME280, BMP280_I2CADDR
 from tsl2591 import TSL2591
-from MPU6050_lib import MPU6050
+from imu import MPU6050
 from rfm69 import RFM69
+from esc_mock import set_speed, calibrate, arm
 
 #DEBUG -----------------------------------------------------------------------------------------------------
-uart = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
+uart = UART(0, baudrate=115200, tx=Pin(12), rx=Pin(13))
 
 #PARAMETRES -------------------------------------------------------------------------------------------------
 NAME           = "OPS"
@@ -22,16 +23,18 @@ BASESTATION_ID = 100 # ID of the node (base station) to be contacted
 
 #PARAMETRES RFM69 -------------------------------------------------------------------------------------------
 # Buses & Pins
+"""
 spi = SPI(0, sck=Pin(6), mosi=Pin(7), miso=Pin(4), baudrate=50000, polarity=0, phase=0, firstbit=SPI.MSB)
 nss = Pin(5, Pin.OUT, value=True)
 rst = Pin(3, Pin.OUT, value=False)
-
+"""
 #I2C SETUP -------------------------------------------------------------------------------------------------
 i2c_bmp = I2C(0, scl=Pin(9), sda=Pin(8))
 i2c_mpu = SoftI2C(sda=Pin(0), scl=Pin(1), freq=400000)
 i2c_tsl = SoftI2C(scl=Pin(15), sda=Pin(14), freq=100000)
 
 #INITIALISATION RFM69 ----------------------------------------------------------------------------------------
+"""
 try:
     rfm = RFM69(spi=spi, nss=nss, reset=rst)
     rfm.tx_power = 20
@@ -46,7 +49,7 @@ try:
     print("RFM69 initialisé")
 except Exception as e:
     print(f"Erreur intialisation RFM69 : {e}")
-
+"""
 
 #INITIALISATION CAPTEURS ------------------------------------------------------------------------------------
 try:
@@ -75,8 +78,20 @@ state = {
     "pressure": None,
     "humidity": None,
     "scan_data": [],
-    "target_angle": None
+    "target_angle": None,
+    "correction": 0.0,
+    "ax": None,
+    "ay": None,
+    "az": None,
+    "gx": None,
+    "gy": None,
+    "gz": None,
+    "aligned": False
 }
+
+#NETTOYAGE VALEURS ------------------------------------------------------------------------------------------
+def safe_value(value, default="NA"):
+    return value if value is not None else default
 
 #CONTROLEUR PID ---------------------------------------------------------------------------------------------
 class PID:
@@ -97,9 +112,16 @@ class PID:
 pid = PID(3.5, 0.01, 1.2)
 
 #CALIBRAGE GYROSCOPE ---------------------------------------------------------------------------------------
-gyro_bias = [0, 0, 0]
 def calibrate_gyro():
+    global gyro_bias
+    print("Initialisation... Attente avant calibrage du gyroscope.")
+    for i in range(5, 0, -1):
+        print(f"Calibrage dans {i} secondes...")
+        led.on()
+        time.sleep(1)
+        led.off()
     print("Calibrage du gyroscope... Ne pas bouger le capteur.")
+    gyro_bias = [0, 0, 0]
     for i in range(100):
         try:
             gyro_bias[0] += imu.gyro.x
@@ -113,10 +135,24 @@ def calibrate_gyro():
     gyro_bias[2] /= 100
     print("Calibrage terminé.")
 
+#CALCUL ALTITUDE --------------------------------------------------------------------------------------
+#pb = pression au niveau de la mer (Pa) --> variable !!
+#tb = température au niveau de la mer (K) --> variable !!
+#lb = taux de chute de température standard (K/m) = -0,0065 K/m
+#r = constante universelle des gaz = 8,31432 (N/m)/(mol.K)
+#g0 = constante d'accélération gravitationnelle = 9,80665 m/s²
+#m = masse molaire de l'air terrestre = 0,0289644 kg/mol
+
+def calculate_altitude(pressure, pb=101325, tb=288, lb=-0.0065, r=8.31432, g0=9.80665, m=0.0289644):
+    pressure = pressure * 100 #switching hPa to Pa
+    altitude = (tb / lb) * ((pressure / pb) ** ((-r * lb) / (g0 * m)) - 1) #application of the formula
+    return altitude
+
 #LECTURE DES CAPTEURS ---------------------------------------------------------------------------------------
 async def read_sensors():
     filtre_complementaire = 0.9999999
     frequence = 0.5
+    
     while True:
         try:
             ax = round(imu.accel.x, 2)
@@ -125,9 +161,14 @@ async def read_sensors():
             gx = round(imu.gyro.x - gyro_bias[0], 4)
             gy = round(imu.gyro.y - gyro_bias[1], 4)
             gz = round(imu.gyro.z - gyro_bias[2], 4)
+            state["ax"] = ax
+            state["ay"] = ay
+            state["az"] = az
+            state["gx"] = gx
+            state["gy"] = gy
+            state["gz"] = gz
         except Exception as e:
             print(f"Erreur extraction MPU6050 : {e}")
-            ax, ay, az, gx, gy, gz = None, None, None, None, None, None
 
         if ay is not None and ax is not None:
             accel_yaw = math.atan2(ay, ax) * 180 / math.pi
@@ -139,25 +180,21 @@ async def read_sensors():
             gyro_yaw = 0
 
         state["yaw"] = filtre_complementaire * gyro_yaw + (1 - filtre_complementaire) * accel_yaw
-
+        
         try:
             lux, full, ir, visible = light_sensor.get_lux()
+            state["full"] = full
+            state["ir"] = ir
         except Exception as e:
             print(f"Erreur extraction TSL2591 : {e}")
-            lux, full, ir, visible = None, None, None
             
-        state["full"] = full
-        state["ir"] = ir
-
         try:
             temp, pressure, humidity = bmp.raw_values
+            state["temp"] = temp
+            state["pressure"] = pressure
+            state["humidity"] = humidity
         except Exception as e:
             print(f"Erreur extraction BMP : {e}")
-            temp, pressure, humidity = None, None, None
-            
-        state["temp"] = temp
-        state["pressure"] = pressure
-        state["humidity"] = humidity
 
         await asyncio.sleep(frequence)
 
@@ -185,10 +222,11 @@ async def scan_light():
 
         if time.ticks_diff(time.ticks_ms(), last_sample_time) > 100:
             # Enregistre (yaw modulo 360, full lumière)
+            print(f"[SCAN] Yaw: {current_yaw % 360:.2f}°, Lumière: {state['full']}")
             state["scan_data"].append((current_yaw % 360, state["full"]))
             last_sample_time = time.ticks_ms()
 
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.5)
 
     set_speed(0)
     print(f"Balayage terminé. {len(state['scan_data'])} points collectés.")
@@ -202,26 +240,31 @@ async def align_to_light():
     if state["target_angle"] is None:
         return
     print("Aligning to light source...")
+    state["aligned"] = False
     while True:
         current = state["yaw"]
         correction = pid.compute(state["target_angle"], current)
-        correction = max(min(correction, 100), -100)
+        correction = max(min(correction, 80), -80)
+        state["correction"] = correction
         set_speed(correction)
-        if abs(current - state["target_angle"]) < 2.0:
+        if abs(current - state["target_angle"]) < 10.0:
             break
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.5)
     set_speed(0)
+    state["aligned"] = True
     print("Aligned!")
 
 #ENVOI DES DONNEES --------------------------------------------------------------------------------------------------
 async def log_uart():
     counter = 0
     while True:
-        msg = f"{counter},{state['yaw']},{state['full']},{state['temp']},{state['pressure']},{state['humidity']}"
-        uart.write(msg + "\n")
+        timestamp = time.time()
+        msg = f"{counter},{timestamp},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["humidity"])},{safe_value(state["ax"])},{safe_value(state["ay"])},{safe_value(state["az"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])}, {int(state["aligned"])},{safe_value(state["yaw"])}"
+        uart.write(f"{msg}\n")
+        print(msg)
         try:
             led.on()
-            rfm.send(bytes(msg , "utf-8"))
+            #rfm.send(bytes(msg , "utf-8"))
             led.off()
         except Exception as e:
             print(f"Erreur lors de l'envoi des données : {e}")
@@ -233,7 +276,6 @@ async def log_uart():
 async def main():
     calibrate()
     arm()
-    calibrate_gyro()
     await scan_light()
     while True:
         await align_to_light()
@@ -241,10 +283,9 @@ async def main():
 
 #LANCEMENT DES TÂCHES --------------------------------------------------------------------------------------------
 async def run_all():
-    await asyncio.gather(
-        read_sensors(),
-        log_uart(),
-        main()
-    )
-
+    calibrate_gyro()
+    
+    asyncio.create_task(read_sensors())
+    asyncio.create_task(log_uart())
+    await main()
 asyncio.run(run_all())
