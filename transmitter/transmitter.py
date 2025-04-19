@@ -168,7 +168,7 @@ Lum. Full   : {safe_value(full)}
 Lum. IR     : {safe_value(ir)}
 Yaw         : {safe_value(yaw)}
 """)
-    
+    print("Taille du msg en octets : " + len(msg.encode("utf-8")))
     #TRANSMISSION DU MESSAGE ----------------------------------------------------------------------------------
     #uart.write(f"{msg}\n")
     try:
