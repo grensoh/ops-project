@@ -115,7 +115,7 @@ while True:
         az = round(imu.accel.z, 2)
         gx = round(imu.gyro.x - gyro_bias[0], 2)
         gy = round(imu.gyro.y - gyro_bias[1], 2)
-        gz = round(imu.gyro.z - gyro_bias[2], 4)
+        gz = round(imu.gyro.z - gyro_bias[2], 2)
     except Exception as e:
         print(f"Erreur dans la lecture du MPU6050 : {e}")
         ax, ay, az, gx, gy, gz = None, None, None, None, None, None
@@ -133,7 +133,7 @@ while True:
         gyro_yaw = 0
         
     yaw = filtre_complementaire * gyro_yaw + (1 - filtre_complementaire) * accel_yaw #filtre complémentaire
-    
+    yaw = round(yaw, 2)
     #EXTRACTION DU TSL2591 -------------------------------------------------------------------------------------
     try:
         lux, full, ir, visible = light_sensor.get_lux() #request des mesures du tsl2591
