@@ -113,8 +113,8 @@ while True:
         ax = round(imu.accel.x, 2)
         ay = round(imu.accel.y, 2)
         az = round(imu.accel.z, 2)
-        gx = round(imu.gyro.x - gyro_bias[0])
-        gy = round(imu.gyro.y - gyro_bias[1])
+        gx = round(imu.gyro.x - gyro_bias[0], 2)
+        gy = round(imu.gyro.y - gyro_bias[1], 2)
         gz = round(imu.gyro.z - gyro_bias[2], 4)
     except Exception as e:
         print(f"Erreur dans la lecture du MPU6050 : {e}")
