@@ -150,7 +150,7 @@ while True:
     
     #MESSAGE BUILDING -----------------------------------------------------------------------------------------
     timestamp = time.time()
-    msg = f"{counter},{safe_value(pressure)},{safe_value(temp)},{safe_value(humidity)},{safe_value(gx)},{safe_value(gy)},{safe_value(gz)},{safe_value(full)},{safe_value(ir)},{safe_value(yaw)}"
+    msg = f"{counter},{safe_value(pressure)},{safe_value(temp)},{safe_value(gx)},{safe_value(gy)},{safe_value(gz)},{safe_value(full)},{safe_value(ir)},{safe_value(yaw)}"
     print(f"""
 --- Données transmises ---
 Counter     : {counter}
