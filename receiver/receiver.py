@@ -68,6 +68,7 @@ while True:
                 try:
                     pressure = float(message_parts[1])  #pression = 2e élément
                     cansat_height = calculate_altitude(pressure)
+                    cansat_height = str(cansat_height)
                 except ValueError:
                     print("Invalid pressure data")
                     cansat_height = "NA"
