@@ -21,10 +21,20 @@ rst = Pin( 3, Pin.OUT, value=False )
 #g0 = constante d'accélération gravitationnelle = 9,80665 m/s²
 #m = masse molaire de l'air terrestre = 0,0289644 kg/mol
 
-def calculate_altitude(pressure, pb=101325, tb=288, lb=-0,0065, r=8,31432, g0=9,80665, m=0,0289644):
-    pressure = pressure * 100 #switching hPa to Pa
-    cansat_height = (tb / lb) * ((pressure / pb) ** ((-r * lb) / (g0 * m)) - 1) #application of the formula
-    return cansat_height
+def calculate_altitude(pressure):
+    pb=101325
+    tb=288
+    lb=-0.0065
+    r=8.31432
+    g0=9.80665
+    m=0.0289644
+    try:
+        pressure = pressure * 100 #switching hPa to Pa
+        altitude = (tb / lb) * ((pressure / pb) ** ((-r * lb) / (g0 * m)) - 1) #application of the formula
+        return altitude
+    except Exception as e:
+        print(f"Erreur dans le calcul de l'altitude : {e}")
+        return "NA"
 
 #INITIALISATION RFM69 --------------------------------------------------------------------------------
 try:
