@@ -7,6 +7,8 @@ from tsl2591 import TSL2591
 from MPU6050_lib import MPU6050
 import time
 import math
+import uos
+import sdcard
 
 #DEBUG -----------------------------------------------------------------------------------------------------
 #uart = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
