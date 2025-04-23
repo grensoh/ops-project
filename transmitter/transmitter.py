@@ -32,6 +32,22 @@ i2c_mpu6050 = SoftI2C(sda=Pin(0), scl=Pin(1), freq=400000)
 i2c_tsl2591 = SoftI2C(scl=Pin(15), sda=Pin(14), freq=100000)
 led = Pin(25, Pin.OUT)
 
+#FONCTION CARTE SD -----------------------------------------------------------------------------------------
+def setup_sd():
+    # Assign chip select (CS) pin (and start it high)
+    cs = machine.Pin(17, machine.Pin.OUT)
+    # Intialize SPI peripheral (start with 1 MHz)
+    spi = machine.SPI(0,
+                      baudrate=1000000,
+                      polarity=0,
+                      phase=0,
+                      bits=8,
+                      firstbit=machine.SPI.MSB,
+                      sck=machine.Pin(18),
+                      mosi=machine.Pin(19),
+                      miso=machine.Pin(16))
+    return sdcard.SDCard(spi, cs)
+    
 #INITIALISATION RFM69 ----------------------------------------------------------------------------------------
 try:
     rfm = RFM69(spi=spi, nss=nss, reset=rst)
