@@ -114,7 +114,7 @@ state = {
     "gx": None,
     "gy": None,
     "gz": None,
-    "aligned": False
+    "aligned": False,
 }
 
 #NETTOYAGE VALEURS ------------------------------------------------------------------------------------------
@@ -185,6 +185,7 @@ def calculate_altitude(pressure):
     except Exception as e:
         print(f"Erreur dans le calcul de l'altitude : {e}")
         return "NA"
+        
 #LECTURE DES CAPTEURS ---------------------------------------------------------------------------------------
 async def read_sensors():
     filtre_complementaire = 0.9999999
@@ -277,6 +278,24 @@ async def scan_light():
         state["target_angle"] = max(state["scan_data"], key=lambda x: x[1])[0]
         print("Angle avec la plus grande luminosité :", state["target_angle"])
 
+#ALTITUDE CHECKER ---------------------------------------------------------------------------------------------------
+scan_triggered = False
+initial_altitude = None
+async def monitor_altitude_change():
+    global initial_altitude, scan_triggered
+    while True:
+        if not scan_triggered and state["pressure"] is not None:
+            current_altitude = calculate_altitude(state["pressure"])
+            if initial_altitude is None:
+                initial_altitude = current_altitude
+            elif current_altitude != "NA":
+                delta = initial_altitude - current_altitude
+                if delta >= 0.5: #debug -> 0.5 et vraie valeur -> 15
+                    print(f"Perte d'altitude détectée : {delta:.2f} m")
+                    scan_triggered = True  # Empêche les déclenchements suivants
+                    await scan_light()
+        await asyncio.sleep(0.5)
+        
 #ALIGNEMENT VIA PID ---------------------------------------------------------------------------------------------
 async def align_to_light():
     if state["target_angle"] is None:
@@ -340,5 +359,7 @@ async def run_all():
     
     asyncio.create_task(read_sensors())
     asyncio.create_task(transmitting())
+    asyncio.create_task(monitor_altitude_change()) 
     await main()
+
 asyncio.run(run_all())
