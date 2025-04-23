@@ -32,31 +32,23 @@ while True:
         if line:
             message_parts = line.split(",") #Découpage de la chaine de données
             print(f"Message : {message_parts}")
-            pressure = safe_float(message_parts[2].strip())
-            temperature = safe_float(message_parts[3].strip())
-            humidity = safe_float(message_parts[4].strip())
-            ax = safe_float(message_parts[5].strip())
-            ay = safe_float(message_parts[6].strip())
-            az = safe_float(message_parts[7].strip())
-            gx = safe_float(message_parts[8].strip())
-            gy = safe_float(message_parts[9].strip())
-            gz = safe_float(message_parts[10].strip())
-            full = safe_float(message_parts[11].strip())
-            ir = safe_float(message_parts[12].strip())
-            yaw = safe_float(message_parts[13].strip())
-            # altitude = safe_float(message_parts[14].strip())
+            pressure = safe_float(message_parts[1].strip())
+            temperature = safe_float(message_parts[2].strip())
+            gx = safe_float(message_parts[3].strip())
+            gy = safe_float(message_parts[4].strip())
+            gz = safe_float(message_parts[5].strip())
+            full = safe_float(message_parts[6].strip())
+            ir = safe_float(message_parts[7].strip())
+            yaw = safe_float(message_parts[8].strip())
+            # altitude = safe_float(message_parts[9].strip())
             altitude = 1200.0  # debugging
-            print(pressure, temperature, humidity, ax, ay, az, gx, gy, gz, full, ir, yaw, altitude)
+            print(pressure, temperature, gx, gy, gz, full, ir, yaw, altitude)
             record = {
                 "measurement": "cansat",
                 "tags": {"flight": "1", "env": "dev"},
                 "fields": {
                     "pressure": pressure,
                     "temperature": temperature,
-                    "humidity": humidity,
-                    "ax": ax,
-                    "ay": ay,
-                    "az": az,
                     "gx": gx,
                     "gy": gy,
                     "gz": gz,
