@@ -47,6 +47,21 @@ def setup_sd():
                       mosi=machine.Pin(19),
                       miso=machine.Pin(16))
     return sdcard.SDCard(spi, cs)
+
+#INITIALISATION SDCARD ----------------------------------------------------------------------------------------
+csv_file = None
+try:
+    # Initialize SD card
+    sd = setup_sd()
+    # Mount filesystem
+    vfs = uos.VfsFat(sd)
+    uos.mount(vfs, "/sd")
+    # Create a file and write something to it
+    #with open("/sd/test01.txt", "r") as file:
+    #    print(f"READ: {file.read()}")
+    csv_file = open(CSV_PATH, "w")
+except Exception as e:
+    print(f"Erreur initalisation SD or csv : {e}")
     
 #INITIALISATION RFM69 ----------------------------------------------------------------------------------------
 try:
