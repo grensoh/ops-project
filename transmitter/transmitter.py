@@ -211,6 +211,11 @@ Yaw         : {safe_value(yaw)}
     except Exception as e:
         print(f"Erreur lors de l'envoi des données : {e}")
         led.off()
+
+    if csv_file is not None:
+        csv_file.write(f"{counter},{timestamp},{safe_value(pressure)},{safe_value(temp)},{safe_value(humidity)},{safe_value(ax)},{safe_value(ay)},{safe_value(az)},{safe_value(gx)},{safe_value(gy)},{safe_value(gz)},{safe_value(full)},{safe_value(ir)},{safe_value(yaw)}\n")
+        if counter % 10 == 0:
+            csv_file.flush()
     
     counter += 1
     time.sleep(frequence)
