@@ -74,7 +74,7 @@ while True:
             rssi = str(rfm.last_rssi) #signal strength
     
             message_parts = message.split(",")
-            if len(message_parts) == 9:
+            if len(message_parts) == 10:
                 try:
                     pressure = float(message_parts[1])  #pression = 2e élément
                     cansat_height = calculate_altitude(pressure)
