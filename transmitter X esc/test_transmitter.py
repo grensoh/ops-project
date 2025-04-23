@@ -233,6 +233,11 @@ async def read_sensors():
         except Exception as e:
             print(f"Erreur extraction BMP : {e}")
 
+        if csv_file is not None:
+        csv_file.write(f"{counter},{timestamp},{safe_value(pressure)},{safe_value(temp)},{safe_value(humidity)},{safe_value(ax)},{safe_value(ay)},{safe_value(az)},{safe_value(gx)},{safe_value(gy)},{safe_value(gz)},{safe_value(full)},{safe_value(ir)},{safe_value(yaw)}\n")
+        if counter % 10 == 0:
+            csv_file.flush()
+
         await asyncio.sleep(frequence)
 
 #BALAYAGE LUMIERE ------------------------------------------------------------------------------------------------
@@ -277,7 +282,6 @@ async def align_to_light():
     if state["target_angle"] is None:
         return
     print("Aligning to light source...")
-    state["aligned"] = False
     while True:
         current = state["yaw"]
         correction = pid.compute(state["target_angle"], current)
@@ -288,24 +292,36 @@ async def align_to_light():
             break
         await asyncio.sleep(0.5)
     set_speed(0)
-    state["aligned"] = True
     print("Aligned!")
 
 #ENVOI DES DONNEES --------------------------------------------------------------------------------------------------
-async def log_uart():
+async def transmitting():
     counter = 0
     while True:
         timestamp = time.time()
-        msg = f"{counter},{timestamp},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["humidity"])},{safe_value(state["ax"])},{safe_value(state["ay"])},{safe_value(state["az"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])}, {int(state["aligned"])},{safe_value(state["yaw"])}"
-        uart.write(f"{msg}\n")
-        print(msg)
+        msg_rfm = f"{counter},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["yaw"])}"
+        msg_sdcard = f"{counter},{timestamp},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["humidity"])},{safe_value(state["ax"])},{safe_value(state["ay"])},{safe_value(state["az"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["yaw"])}"
+        #uart.write(f"{msg}\n")
+        print(msg_sdcard)
+        print(msg_rfm)
         try:
             led.on()
-            #rfm.send(bytes(msg , "utf-8"))
+            rfm.send(bytes(msg_rfm , "utf-8"))
             led.off()
         except Exception as e:
             print(f"Erreur lors de l'envoi des données : {e}")
             led.off()
+
+        if csv_file is not None:
+            try:
+                csv_file.write(f"{msg_sdcard}\n")
+                if counter % 10 == 0:
+                    csv_file.flush()
+            except Exception as e:
+                print(f"Erreur écriture sur la carte SD : {e}")
+                continue
+                  
+            
         counter += 1
         await asyncio.sleep(0.5)
 
@@ -323,6 +339,6 @@ async def run_all():
     calibrate_gyro()
     
     asyncio.create_task(read_sensors())
-    asyncio.create_task(log_uart())
+    asyncio.create_task(transmitting())
     await main()
 asyncio.run(run_all())
