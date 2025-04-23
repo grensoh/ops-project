@@ -143,11 +143,20 @@ def calibrate_gyro():
 #g0 = constante d'accélération gravitationnelle = 9,80665 m/s²
 #m = masse molaire de l'air terrestre = 0,0289644 kg/mol
 
-def calculate_altitude(pressure, pb=101325, tb=288, lb=-0.0065, r=8.31432, g0=9.80665, m=0.0289644):
-    pressure = pressure * 100 #switching hPa to Pa
-    altitude = (tb / lb) * ((pressure / pb) ** ((-r * lb) / (g0 * m)) - 1) #application of the formula
-    return altitude
-
+def calculate_altitude(pressure):
+    pb=101325
+    tb=288
+    lb=-0.0065
+    r=8.31432
+    g0=9.80665
+    m=0.0289644
+    try:
+        pressure = pressure * 100 #switching hPa to Pa
+        altitude = (tb / lb) * ((pressure / pb) ** ((-r * lb) / (g0 * m)) - 1) #application of the formula
+        return altitude
+    except Exception as e:
+        print(f"Erreur dans le calcul de l'altitude : {e}")
+        return "NA"
 #LECTURE DES CAPTEURS ---------------------------------------------------------------------------------------
 async def read_sensors():
     filtre_complementaire = 0.9999999
