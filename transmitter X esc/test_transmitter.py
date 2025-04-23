@@ -23,18 +23,47 @@ BASESTATION_ID = 100 # ID of the node (base station) to be contacted
 
 #PARAMETRES RFM69 -------------------------------------------------------------------------------------------
 # Buses & Pins
-"""
 spi = SPI(0, sck=Pin(6), mosi=Pin(7), miso=Pin(4), baudrate=50000, polarity=0, phase=0, firstbit=SPI.MSB)
 nss = Pin(5, Pin.OUT, value=True)
 rst = Pin(3, Pin.OUT, value=False)
-"""
+
 #I2C SETUP -------------------------------------------------------------------------------------------------
 i2c_bmp = I2C(0, scl=Pin(9), sda=Pin(8))
 i2c_mpu = SoftI2C(sda=Pin(0), scl=Pin(1), freq=400000)
 i2c_tsl = SoftI2C(scl=Pin(15), sda=Pin(14), freq=100000)
 
+#FONCTION CARTE SD -----------------------------------------------------------------------------------------
+def setup_sd():
+    # Assign chip select (CS) pin (and start it high)
+    cs = machine.Pin(17, machine.Pin.OUT)
+    # Intialize SPI peripheral (start with 1 MHz)
+    spi = machine.SPI(0,
+                      baudrate=1000000,
+                      polarity=0,
+                      phase=0,
+                      bits=8,
+                      firstbit=machine.SPI.MSB,
+                      sck=machine.Pin(18),
+                      mosi=machine.Pin(19),
+                      miso=machine.Pin(16))
+    return sdcard.SDCard(spi, cs)
+
+#INITIALISATION SDCARD ----------------------------------------------------------------------------------------
+csv_file = None
+try:
+    # Initialize SD card
+    sd = setup_sd()
+    # Mount filesystem
+    vfs = uos.VfsFat(sd)
+    uos.mount(vfs, "/sd")
+    # Create a file and write something to it
+    #with open("/sd/test01.txt", "r") as file:
+    #    print(f"READ: {file.read()}")
+    csv_file = open(CSV_PATH, "w")
+except Exception as e:
+    print(f"Erreur initalisation SD or csv : {e}")
+    
 #INITIALISATION RFM69 ----------------------------------------------------------------------------------------
-"""
 try:
     rfm = RFM69(spi=spi, nss=nss, reset=rst)
     rfm.tx_power = 20
@@ -49,7 +78,6 @@ try:
     print("RFM69 initialisé")
 except Exception as e:
     print(f"Erreur intialisation RFM69 : {e}")
-"""
 
 #INITIALISATION CAPTEURS ------------------------------------------------------------------------------------
 try:
