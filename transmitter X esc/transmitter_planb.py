@@ -4,12 +4,11 @@ import uasyncio as asyncio
 import time
 import math
 from machine import SPI, I2C, Pin, ADC, SoftI2C, UART
-#from esc_control import set_speed, calibrate, arm
+from esc import set_motor
 from bme280 import BME280, BMP280_I2CADDR
 from tsl2591 import TSL2591
 from imu import MPU6050
 from rfm69 import RFM69
-from esc_mock import set_speed, calibrate, arm
 import sdcard
 import uos 
 
@@ -227,9 +226,13 @@ scan_triggered = False
 initial_altitude = None
 async def monitor_altitude_change():
     global initial_altitude, scan_triggered
-    while True:
+    while scan_triggered is not True:
         if not scan_triggered and state["pressure"] is not None:
-            current_altitude = calculate_altitude(state["pressure"])
+            try:
+                current_altitude = calculate_altitude(state["pressure"])
+            except Exception as e:
+                print(f"Impossible de calculer l'altitude : {e}")
+                current_altitude = "NA"
             if initial_altitude is None:
                 initial_altitude = current_altitude
             elif current_altitude != "NA":
@@ -272,22 +275,22 @@ async def transmitting():
         await asyncio.sleep(0.5)
 
 #BOUCLE PRINCIPALE -----------------------------------------------------------------------------------------------
-async def launch_motor(speed):
-  if speed > 0:
+async def launch_motor(direction):
+  if direction == 1:
     print("Rotation dans le sens horaire...")
-    sleep_time = 5
-  elif speed < 0:
+    sleep_time = 8
+  elif direction == -1:
     print("Rotation dans le sens antihoraire...")
-    sleep_time = 5
-  elif speed == 0:
+    sleep_time = 8
+  elif direction == 0:
     print("Arrêt...")
-    sleep_time = 2
+    sleep_time = 4
   else:
-    print("Value error")
+    print("Direction invalide")
 
   try:
-    set_speed(speed)
-    state["correction"] = speed
+    set_motor(direction)
+    state["correction"] = direction
     await asyncio.sleep(sleep_time)
   except Exception as e:
     print(f"Erreur moteur : {e}")
@@ -296,15 +299,13 @@ async def rotation_sequence():
     await asyncio.sleep(1)
     while True:
       launch_motor(0)
-      launch_motor(60)
+      launch_motor(1)
       launch_motor(0)
-      launch_motor(-60)
+      launch_motor(-1)
 
 #LANCEMENT DES TÂCHES --------------------------------------------------------------------------------------------
 async def run_all():
     calibrate_gyro()
-    calibrate()
-    arm()
     
     asyncio.create_task(read_sensors())
     asyncio.create_task(transmitting())
