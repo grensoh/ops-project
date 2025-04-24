@@ -10,7 +10,7 @@ from tsl2591 import TSL2591
 from imu import MPU6050
 from rfm69 import RFM69
 from esc_mock import set_speed, calibrate, arm
-import sd card
+import sdcard
 import uos 
 
 #DEBUG -----------------------------------------------------------------------------------------------------
@@ -218,11 +218,6 @@ async def read_sensors():
             state["humidity"] = humidity
         except Exception as e:
             print(f"Erreur extraction BMP : {e}")
-
-        if csv_file is not None:
-            csv_file.write(f"{counter},{timestamp},{safe_value(pressure)},{safe_value(temp)},{safe_value(humidity)},{safe_value(ax)},{safe_value(ay)},{safe_value(az)},{safe_value(gx)},{safe_value(gy)},{safe_value(gz)},{safe_value(full)},{safe_value(ir)},{safe_value(yaw)}\n")
-            if counter % 10 == 0:
-                csv_file.flush()
 
         await asyncio.sleep(frequence)
 
