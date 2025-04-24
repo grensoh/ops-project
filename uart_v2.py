@@ -57,7 +57,7 @@ while True:
                     "ir": ir,
                     "correction": correction,
                     "yaw": yaw,
-                    "altitude": altitude,
+                    "altitude": altitude
                 },
             }
 
