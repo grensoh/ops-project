@@ -3,7 +3,7 @@ from rfm69 import RFM69
 import time
 
 #PARAMETRES -------------------------------------------------------------------------------------------
-FREQ           = 433.1
+FREQ           = 431
 ENCRYPTION_KEY = b"\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08"
 NODE_ID        = 100 # ID of this node (BaseStation)
 led = Pin( 25, Pin.OUT )
