@@ -3,8 +3,7 @@ from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from time import sleep
 
-token = "WIWH9gC1xGvkm5KsjOHXrPknWQUrmgRCS9qv-M0wLWnhAu5vSaOWuLXT6d2dY5X47PakyixfTiL0MUFPGMV_zg=="
-org = "ops-project"
+token = "L7R-9LvFXqjaBENC6qWpZ9b0HyD7sSM53BurV4aTpEfJoJgjMfwzdy_QSoOzTRznlysPwkXw808fIHJnC4sG-g=="
 bucket = "ops-project-bucket"
 
 def safe_float(value):
