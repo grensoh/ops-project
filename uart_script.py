@@ -43,8 +43,8 @@ while True:
             full = safe_float(message_parts[11].strip())
             ir = safe_float(message_parts[12].strip())
             yaw = safe_float(message_parts[13].strip())
-            # altitude = safe_float(message_parts[14].strip())
-            altitude = 1200.0  # debugging
+            altitude = safe_float(message_parts[14].strip())
+            #altitude = 1200.0  # debugging
             print(pressure, temperature, humidity, ax, ay, az, gx, gy, gz, full, ir, yaw, altitude)
             record = {
                 "measurement": "cansat",
