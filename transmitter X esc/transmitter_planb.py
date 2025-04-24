@@ -101,6 +101,7 @@ except Exception as e:
 led = Pin(25, Pin.OUT)
 
 #VARIABLES GLOBALES ----------------------------------------------------------------------------------------
+gyro_bias = [0,0,0]
 state = {
     "yaw": 0.0,
     "full": 0,
@@ -236,7 +237,7 @@ async def monitor_altitude_change():
                 if delta >= 0.5: #debug -> 0.5 et vraie valeur -> 15
                     print(f"Perte d'altitude détectée : {delta:.2f} m")
                     scan_triggered = True  # Empêche les déclenchements suivants
-                    await main()
+                    asyncio.create_task(rotation_frequence())
         await asyncio.sleep(0.5)
 
 #ENVOI DES DONNEES --------------------------------------------------------------------------------------------------
@@ -271,7 +272,7 @@ async def transmitting():
         await asyncio.sleep(0.5)
 
 #BOUCLE PRINCIPALE -----------------------------------------------------------------------------------------------
-def launch_motor(speed):
+async def launch_motor(speed):
   if speed > 0:
     print("Rotation dans le sens horaire...")
     sleep_time = 5
@@ -291,9 +292,7 @@ def launch_motor(speed):
   except Exception as e:
     print(f"Erreur moteur : {e}")
 
-async def main():
-    calibrate()
-    arm()
+async def rotation_sequence():
     await asyncio.sleep(1)
     while True:
       launch_motor(0)
