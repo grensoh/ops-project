@@ -18,7 +18,7 @@ uart = UART(0, baudrate=115200, tx=Pin(12), rx=Pin(13))
 
 #PARAMETRES -------------------------------------------------------------------------------------------------
 NAME           = "OPS"
-FREQ           = 433.1
+FREQ           = 431
 CSV_PATH       = "/sd/data.csv"
 ENCRYPTION_KEY = b"\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08"
 NODE_ID        = 120 # ID of this node
