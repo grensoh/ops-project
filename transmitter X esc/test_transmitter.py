@@ -10,6 +10,8 @@ from tsl2591 import TSL2591
 from imu import MPU6050
 from rfm69 import RFM69
 from esc_mock import set_speed, calibrate, arm
+import sd card
+import uos 
 
 #DEBUG -----------------------------------------------------------------------------------------------------
 uart = UART(0, baudrate=115200, tx=Pin(12), rx=Pin(13))
@@ -17,6 +19,7 @@ uart = UART(0, baudrate=115200, tx=Pin(12), rx=Pin(13))
 #PARAMETRES -------------------------------------------------------------------------------------------------
 NAME           = "OPS"
 FREQ           = 433.1
+CSV_PATH       = "/sd/data.csv"
 ENCRYPTION_KEY = b"\x01\x02\x03\x04\x05\x06\x07\x08\x01\x02\x03\x04\x05\x06\x07\x08"
 NODE_ID        = 120 # ID of this node
 BASESTATION_ID = 100 # ID of the node (base station) to be contacted
