@@ -22,8 +22,8 @@ BASESTATION_ID = 100 # ID of the node (base station) to be contacted
 
 #PARAMETRES RFM69 -------------------------------------------------------------------------------------------
 # Buses & Pins
-spi = SPI(0, sck=Pin(6), mosi=Pin(7), miso=Pin(4), baudrate=50000, polarity=0, phase=0, firstbit=SPI.MSB)
-nss = Pin(5, Pin.OUT, value=True)
+spi = SPI(1, sck=Pin(10), mosi=Pin(11), miso=Pin(12), baudrate=50000, polarity=0, phase=0, firstbit=SPI.MSB)
+nss = Pin(13, Pin.OUT, value=True)
 rst = Pin(3, Pin.OUT, value=False)
 
 #I2C --------------------------------------------------------------------------------------------------------
