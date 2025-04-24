@@ -42,8 +42,9 @@ while True:
             correction = safe_float(message_parts[8].strip())
             yaw = safe_float(message_parts[9].strip())
             altitude = safe_float(message_parts[10].strip())
+            rssi = safe_float(message_parts[11].strip())
             #altitude = 1200.0  # debugging
-            print(pressure, temperature, gx, gy, gz, full, ir, correction, yaw, altitude)
+            print(pressure, temperature, gx, gy, gz, full, ir, correction, yaw, altitude, rssi)
             record = {
                 "measurement": "cansat",
                 "tags": {"flight": "1", "env": "dev"},
@@ -57,7 +58,8 @@ while True:
                     "ir": ir,
                     "correction": correction,
                     "yaw": yaw,
-                    "altitude": altitude
+                    "altitude": altitude,
+                    "rssi": rssi
                 },
             }
 
