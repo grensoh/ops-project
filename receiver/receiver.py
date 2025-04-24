@@ -85,7 +85,7 @@ while True:
             else:
                 print("Invalid message format")
  
-            print(f"{message}, {cansat_height} m, RSSI: {rssi}") # print message with signal strength and cansat height
+            print(f"{message},{cansat_height},{rssi}") # print message with signal strength and cansat height
             final_message = f"{message},{cansat_height}"
             
             try:
