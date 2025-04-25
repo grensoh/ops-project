@@ -298,10 +298,10 @@ async def launch_motor(direction):
 async def rotation_sequence():
     await asyncio.sleep(1)
     while True:
-      launch_motor(0)
-      launch_motor(1)
-      launch_motor(0)
-      launch_motor(-1)
+      await launch_motor(0)
+      await launch_motor(1)
+      await launch_motor(0)
+      await launch_motor(-1)
 
 #LANCEMENT DES TÂCHES --------------------------------------------------------------------------------------------
 async def run_all():
