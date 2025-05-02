@@ -237,11 +237,6 @@ async def read_sensors():
         except Exception as e:
             print(f"Erreur extraction BMP : {e}")
 
-        if csv_file is not None:
-        csv_file.write(f"{counter},{timestamp},{safe_value(pressure)},{safe_value(temp)},{safe_value(humidity)},{safe_value(ax)},{safe_value(ay)},{safe_value(az)},{safe_value(gx)},{safe_value(gy)},{safe_value(gz)},{safe_value(full)},{safe_value(ir)},{safe_value(yaw)}\n")
-        if counter % 10 == 0:
-            csv_file.flush()
-
         await asyncio.sleep(frequence)
 
 #BALAYAGE LUMIERE ------------------------------------------------------------------------------------------------
@@ -349,8 +344,6 @@ async def transmitting():
 
 #BOUCLE PRINCIPALE -----------------------------------------------------------------------------------------------
 async def main():
-    calibrate()
-    arm()
     await scan_light()
     while True:
         await align_to_light()
@@ -359,6 +352,8 @@ async def main():
 #LANCEMENT DES TÂCHES --------------------------------------------------------------------------------------------
 async def run_all():
     calibrate_gyro()
+    calibrate()
+    arm()
     
     asyncio.create_task(read_sensors())
     asyncio.create_task(transmitting())
