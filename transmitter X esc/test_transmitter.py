@@ -291,7 +291,7 @@ async def monitor_altitude_change():
                 if delta >= 0.5: #debug -> 0.5 et vraie valeur -> 15
                     print(f"Perte d'altitude détectée : {delta:.2f} m")
                     scan_triggered = True  # Empêche les déclenchements suivants
-                    await scan_light()
+                    await main()
         await asyncio.sleep(0.5)
         
 #ALIGNEMENT VIA PID ---------------------------------------------------------------------------------------------
