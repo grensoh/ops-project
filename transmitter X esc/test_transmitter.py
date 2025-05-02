@@ -358,6 +358,5 @@ async def run_all():
     asyncio.create_task(read_sensors())
     asyncio.create_task(transmitting())
     asyncio.create_task(monitor_altitude_change()) 
-    await main()
 
 asyncio.run(run_all())
