@@ -10,7 +10,7 @@ from tsl2591 import TSL2591
 from imu import MPU6050
 from rfm69 import RFM69
 from esc_mock import set_speed, calibrate, arm
-import sd card
+import sdcard
 import uos 
 
 #DEBUG -----------------------------------------------------------------------------------------------------
