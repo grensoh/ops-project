@@ -15,7 +15,7 @@ def safe_float(value):
 
 #CONNEXION AU PORT SERIE ----------------------------------------------------------------------------------------
 print("Connexion au port série ...")
-sleep(5)
+sleep(3)
 try:
     ser = serial.Serial(port="COM4", baudrate=115200, timeout=1)
 except Exception as e:
@@ -39,29 +39,30 @@ while True:
             gz = safe_float(message_parts[5].strip())
             full = safe_float(message_parts[6].strip())
             ir = safe_float(message_parts[7].strip())
-            yaw = safe_float(message_parts[8].strip())
+            correction = safe_float(message_parts[8].strip())
             pitch = safe_float(message_parts[9].strip())
             roll = safe_float(message_parts[10].strip())
-            altitude = safe_float(message_parts[11].strip())
-            rssi = safe_float(message_parts[12].strip())
-            print(pressure, temperature, gx, gy, gz, full, ir, yaw, pitch, roll, altitude)
+            yaw = safe_float(message_parts[11].strip())
+            altitude = safe_float(message_parts[12].strip())
+            rssi = safe_float(message_parts[13].strip())
+            print(pressure, temperature, gx, gy, gz, full, ir, correction, pitch, roll, yaw, altitude, rssi)
             record = {
                 "measurement": "cansat",
                 "tags": {"flight": "1", "env": "dev"},
                 "fields": {
                     "pressure": pressure,
                     "temperature": temperature,
-                    "humidity": humidity,
-                    "ax": ax,
-                    "ay": ay,
-                    "az": az,
                     "gx": gx,
                     "gy": gy,
                     "gz": gz,
                     "full": full,
                     "ir": ir,
+                    "correction": correction,
+                    "pitch": pitch,
+                    "roll": roll,
                     "yaw": yaw,
                     "altitude": altitude,
+                    "rssi": rssi,
                 },
             }
 
@@ -72,11 +73,11 @@ while True:
                     write_api.write(bucket=bucket, org=org, record=record)
             except Exception as e:
                 print(f"Erreur lors de l'écriture InfluxDB : {e}")
-                sleep(1)
+                sleep(0.5)
 
     except serial.SerialException as e:
         print(f"Erreur série : {e}")
-        sleep(1)
+        sleep(0.5)
     except UnicodeDecodeError:
         print("Erreur de décodage — ligne ignorée")
         continue
