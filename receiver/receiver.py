@@ -60,6 +60,91 @@ try:
 except Exception as e:
     print(f"Erreur initialisation UART : {e}")
 
+#FONCTION POUR ASSEMBLER LE MSG ---------------------------------------------------------------------
+fragment_buffer = {}
+
+def assemble_message(received_fragments, total):
+    elements = []
+    for i in range(1, total + 1):
+        part = received_fragments.get(i)
+        if part:
+            cleaned_part = part.strip().strip(",")
+            elements.extend(cleaned_part.split(","))
+        else:
+            elements_per_fragment = 10 // total
+            elements.extend(["NA"] * elements_per_fragment)
+    return elements
+
+#FONCTION POUR GERER LES FRAGMENTS ------------------------------------------------------------------
+def handle_fragment(data, rssi):
+    try:
+        text = data.decode("utf-8")
+        header, content = text.split(":", 1)
+        index, total = map(int, header.split("/"))
+
+        message_id = "default"
+
+        # Initialisation du buffer de fragments pour ce message_id
+        if message_id not in fragment_buffer:
+            fragment_buffer[message_id] = {
+                "received": {},
+                "start_time": time.time()
+            }
+
+        # Ajout du fragment reçu
+        fragment_buffer[message_id]["received"][index] = content.strip()
+
+        received = fragment_buffer[message_id]["received"]
+        
+        # Vérifier si tous les fragments ont été reçus ou si timeout est atteint
+        if len(received) == total:
+            full_message = assemble_message(received, total)
+            print(f"[MESSAGE COMPLET] {','.join(full_message)}")
+
+            try:
+                pressure = float(full_message[1])  # pression = 2e élément
+                cansat_height = calculate_altitude(pressure)
+                cansat_height = str(cansat_height)
+            except ValueError:
+                print("Données de pression invalides.")
+                cansat_height = "NA"
+
+            final_message = f"{','.join(full_message)},{cansat_height}"
+
+            try:
+                uart.write(f"{final_message}\n")
+            except Exception as e:
+                print(f"Erreur lors de l'envoi UART : {e}")
+
+            del fragment_buffer[message_id]
+            
+        elif time.time() - fragment_buffer[message_id]["start_time"] > 0.5:
+            # Si le timeout est atteint, on assemble le message avec des "NA" pour les fragments manquants
+            full_message = assemble_message(received, total)
+            print(f"[MESSAGE INCOMPLET - Timeout] {','.join(full_message)}")
+
+            try:
+                pressure = float(full_message[1])  # pression = 2e élément
+                cansat_height = calculate_altitude(pressure)
+                cansat_height = str(cansat_height)
+            except ValueError:
+                print("Données de pression invalides.")
+                cansat_height = "NA"
+
+            final_message = f"{','.join(full_message)},{cansat_height},{rssi}"
+
+            # Envoi du message final incomplet par UART
+            try:
+                uart.write(f"{final_message}\n")
+            except Exception as e:
+                print(f"Erreur lors de l'envoi UART : {e}")
+
+            del fragment_buffer[message_id]
+
+    except Exception as e:
+        print(f"Erreur lors du traitement du fragment : {e}")
+
+
 
 while True:
     try:
@@ -69,29 +154,9 @@ while True:
             pass    
         else:
             led.on()
-            #decode from ASCII text (to local utf-8)
-            message = str(packet, "ascii")
-            rssi = str(rfm.last_rssi) #signal strength
-    
-            message_parts = message.split(",")
-            if len(message_parts) == 10:
-                try:
-                    pressure = float(message_parts[1])  #pression = 2e élément
-                    cansat_height = calculate_altitude(pressure)
-                    cansat_height = str(cansat_height)
-                except ValueError:
-                    print("Invalid pressure data")
-                    cansat_height = "NA"
-            else:
-                print("Invalid message format")
- 
-            print(f"{message},{cansat_height},{rssi}") # print message with signal strength and cansat height
-            final_message = f"{message},{cansat_height}"
-            
-            try:
-                uart.write(f"{final_message}\n")
-            except Exception as e:
-                print(f"Erreur lors de l'envoi UART : {e}")
+            message = packet  # Les données sont déjà en bytes
+            rssi = str(rfm.last_rssi)  # signal strength
+            handle_fragment(message, rssi)
             led.off()
     except Exception as e:
         print(f"Erreur dans la boucle de réception : {e}")
