@@ -5,6 +5,7 @@ from time import sleep
 
 token = "L7R-9LvFXqjaBENC6qWpZ9b0HyD7sSM53BurV4aTpEfJoJgjMfwzdy_QSoOzTRznlysPwkXw808fIHJnC4sG-g=="
 bucket = "ops-project-bucket"
+org = "ops-project"
 
 def safe_float(value):
     try:
