@@ -76,7 +76,7 @@ def assemble_message(received_fragments, total):
     return elements
 
 #FONCTION POUR GERER LES FRAGMENTS ------------------------------------------------------------------
-def handle_fragment(data, rssi):
+def handle_fragment(data, rssi, timestamp):
     try:
         text = data.decode("utf-8")
         header, content = text.split(":", 1)
@@ -109,7 +109,7 @@ def handle_fragment(data, rssi):
                 print("Données de pression invalides.")
                 cansat_height = "NA"
 
-            final_message = f"{','.join(full_message)},{cansat_height}"
+            final_message = f"{','.join(full_message)},{cansat_height},{rssi},{timestamp}"
 
             try:
                 uart.write(f"{final_message}\n")
@@ -131,9 +131,8 @@ def handle_fragment(data, rssi):
                 print("Données de pression invalides.")
                 cansat_height = "NA"
 
-            final_message = f"{','.join(full_message)},{cansat_height},{rssi}"
+            final_message = f"{','.join(full_message)},{cansat_height},{rssi},{timestamp}"
 
-            # Envoi du message final incomplet par UART
             try:
                 uart.write(f"{final_message}\n")
             except Exception as e:
@@ -156,7 +155,8 @@ while True:
             led.on()
             message = packet  # Les données sont déjà en bytes
             rssi = str(rfm.last_rssi)  # signal strength
-            handle_fragment(message, rssi)
+            timestamp = time.time()
+            handle_fragment(message, rssi, timestamp)
             led.off()
     except Exception as e:
         print(f"Erreur dans la boucle de réception : {e}")
