@@ -103,6 +103,8 @@ led = Pin(25, Pin.OUT)
 #VARIABLES GLOBALES ----------------------------------------------------------------------------------------
 state = {
     "yaw": 0.0,
+    "pitch": 0.0,
+    "roll": 0.0,
     "full": 0,
     "ir": 0,
     "temp": None,
@@ -117,7 +119,6 @@ state = {
     "gx": None,
     "gy": None,
     "gz": None,
-    "aligned": False,
 }
 
 #NETTOYAGE VALEURS ------------------------------------------------------------------------------------------
@@ -189,6 +190,30 @@ def calculate_altitude(pressure):
         print(f"Erreur dans le calcul de l'altitude : {e}")
         return "NA"
         
+#DIVISION MESSAGE RFM69 ---------------------------------------------------------------------------------
+def fragment_message(message, max_size=60):
+    # Calculer combien de fragments sont nécessaires
+    num_fragments = math.ceil(len(message) / max_size)
+    fragments = []
+    
+    fragment_size = len(message) // num_fragments
+
+    for i in range(num_fragments):
+        start = i * fragment_size
+        # S'assurer que le dernier fragment inclut tout le reste du message
+        if i == num_fragments - 1:
+            end = len(message)
+        else:
+            end = (i + 1) * fragment_size
+        
+        fragment = message[start:end]
+
+        fragment_header = f"{i+1}/{num_fragments}:"
+        fragment_with_header = fragment_header + fragment
+        fragments.append(fragment_with_header)
+        
+    return fragments
+    
 #LECTURE DES CAPTEURS ---------------------------------------------------------------------------------------
 async def read_sensors():
     filtre_complementaire = 0.9999999
@@ -199,15 +224,23 @@ async def read_sensors():
             ax = round(imu.accel.x, 2)
             ay = round(imu.accel.y, 2)
             az = round(imu.accel.z, 2)
-            gx = round(imu.gyro.x - gyro_bias[0], 4)
-            gy = round(imu.gyro.y - gyro_bias[1], 4)
-            gz = round(imu.gyro.z - gyro_bias[2], 4)
+            gx = round(imu.gyro.x - gyro_bias[0], 2)
+            gy = round(imu.gyro.y - gyro_bias[1], 2)
+            gz = round(imu.gyro.z - gyro_bias[2], 2)
+
+            pitch = math.degrees(math.atan2(ay, math.sqrt(ax**2 + az**2)))  # Angle autour de l'axe X
+            roll = math.degrees(math.atan2(-ax, math.sqrt(ay**2 + az**2)))  # Angle autour de l'axe Y
+            pitch = round(pitch, 2)
+            roll = round(roll, 2)
+
             state["ax"] = ax
             state["ay"] = ay
             state["az"] = az
             state["gx"] = gx
             state["gy"] = gy
             state["gz"] = gz
+            state["pitch"] = pitch
+            state["roll"] = roll
         except Exception as e:
             print(f"Erreur extraction MPU6050 : {e}")
 
@@ -316,14 +349,18 @@ async def transmitting():
     counter = 0
     while True:
         timestamp = time.time()
-        msg_rfm = f"{counter},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["yaw"])}"
-        msg_sdcard = f"{counter},{timestamp},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["humidity"])},{safe_value(state["ax"])},{safe_value(state["ay"])},{safe_value(state["az"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["yaw"])}"
+        msg_rfm = f"{counter},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["pitch"])},{safe_value(state["roll"])},{safe_value(state["yaw"])}"
+        msg_sdcard = f"{counter},{timestamp},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["humidity"])},{safe_value(state["ax"])},{safe_value(state["ay"])},{safe_value(state["az"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["pitch"])},{safe_value(state["roll"])},{safe_value(state["yaw"])}"
         #uart.write(f"{msg}\n")
         print(msg_sdcard)
         print(msg_rfm)
+
+        fragments_rfm = fragment_message(msg_rfm)
         try:
             led.on()
-            rfm.send(bytes(msg_rfm , "utf-8"))
+            for fragment in fragments_rfm:
+                rfm.send(bytes(fragment, "utf-8"))
+                await asyncio.sleep(0.1)
             led.off()
         except Exception as e:
             print(f"Erreur lors de l'envoi des données : {e}")
@@ -351,12 +388,23 @@ async def main():
 
 #LANCEMENT DES TÂCHES --------------------------------------------------------------------------------------------
 async def run_all():
-    calibrate_gyro()
-    calibrate()
-    arm()
-    
-    asyncio.create_task(read_sensors())
-    asyncio.create_task(transmitting())
-    asyncio.create_task(monitor_altitude_change()) 
+    try:
+        calibrate_gyro()
+        calibrate()
+        arm()
+    except Exception as e:
+        print(f"Erreur initialisation moteur ou gyro : {e}")
+        pass
+        
+    try:
+        asyncio.create_task(read_sensors())
+        asyncio.create_task(transmitting())
+        asyncio.create_task(monitor_altitude_change()) 
+    except Exception as e:
+        print(f"Erreur lancement des tâches : {e}")
+        pass
+        
+    while True:
+        await asyncio.sleep(1)
 
 asyncio.run(run_all())
