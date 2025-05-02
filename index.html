@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>CANSAT Visualisation</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Visualisation du CANSAT - OPS PROJECT</h1>
+    </header>
+
+    <main>
+      <div id="mainContent">
+        <div id="leftPanel">
+          <div id="container3D"></div>
+          <div id="refreshContainer">
+            <button id="refreshBtn">🔄 Réinitialiser la position</button>
+          </div>
+        </div>
+    
+        <div id="chartContainer">
+          <canvas id="rotationChart" width="700" height="740"></canvas>
+          <div id="rotationData">
+            <div class="rotationValue">gx: <span id="gx">--</span></div>
+            <div class="rotationValue">gy: <span id="gy">--</span></div>
+            <div class="rotationValue">gz: <span id="gz">--</span></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="js/main.js" defer></script>
+  </body>
+</html>
