@@ -349,7 +349,7 @@ async def transmitting():
     counter = 0
     while True:
         timestamp = time.time()
-        msg_rfm = f"{counter},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["pitch"])},{safe_value(state["roll"])},{safe_value(state["yaw"])}"
+        msg_rfm = f"{counter},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["pitch"])},{safe_value(state["roll"])},{safe_value(state["yaw"])}"
         msg_sdcard = f"{counter},{timestamp},{safe_value(state["pressure"])},{safe_value(state["temp"])},{safe_value(state["humidity"])},{safe_value(state["ax"])},{safe_value(state["ay"])},{safe_value(state["az"])},{safe_value(state["gx"])},{safe_value(state["gy"])},{safe_value(state["gz"])},{safe_value(state["full"])},{safe_value(state["ir"])},{safe_value(state["correction"])},{safe_value(state["pitch"])},{safe_value(state["roll"])},{safe_value(state["yaw"])}"
         #uart.write(f"{msg}\n")
         print(msg_sdcard)
