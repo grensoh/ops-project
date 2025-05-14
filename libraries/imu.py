@@ -107,7 +107,7 @@ class MPU6050(object):
         self.wake()                             # wake it up
         self.passthrough = True                 # Enable mag access from main I2C bus
         self.accel_range = 0                    # default to highest sensitivity
-        self.gyro_range = 0                     # Likewise for gyro
+        self.gyro_range = 3                     # Likewise for gyro
 
     # read from device
     def _read(self, buf, memaddr, addr):        # addr = I2C device address, memaddr = memory location within the I2C device
